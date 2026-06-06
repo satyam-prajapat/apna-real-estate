@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex Management Dashboard</title>
+    <!-- Chart.js Engine for Graph & Doughnut Widgets Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Modern UI Reset & Semantic Variables Base */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        :root {
+            --bg-body: #f8f9fa;
+            --bg-card: #ffffff;
+            --border-color: #eff1f4;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --sidebar-bg: #0c101a;
+            --table-th: #f8f9fa;
+            --input-bg: #f1f3f7;
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.01);
+            --hover-shadow: 0 20px 35px rgba(0,0,0,0.05);
+        }
+
+        /* 🌓 DYNAMIC DARK INTEGRATION VARIABLES */
+        body.dark-theme {
+            --bg-body: #090d16;
+            --bg-card: #121824;
+            --border-color: #1e293b;
+            --text-main: #f1f5f9;
+            --text-sub: #94a3b8;
+            --sidebar-bg: #070a10;
+            --table-th: #1e293b;
+            --input-bg: #1e293b;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            --hover-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+        body { background-color: var(--bg-body); color: var(--text-main); display: flex; min-height: 100vh; transition: background 0.3s, color 0.3s; overflow-x: hidden; }
+
+        /* 1. LEFT SIDEBAR NAVIGATION */
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: #94a3b8; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; left: 0; z-index: 100; border-right: 1px solid var(--border-color); }
+        .sidebar-brand { padding: 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .brand-icon { background: #00ca72; color: #fff; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 8px; }
+        .brand-text { color: #fff; font-size: 18px; font-weight: 700; }
+        .sidebar-menu { list-style: none; padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; }
+        .menu-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #475569; padding: 10px 12px 5px 12px; font-weight: 700; }
+        .menu-item a { display: flex; align-items: center; gap: 12px; padding: 12px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 500; }
+        .menu-item a:hover, .menu-item.active a { background-color: rgba(255,255,255,0.05); color: #fff; }
+        .menu-item.active a { color: #00ca72; font-weight: 600; }
+		/* ↩️ RESTORED SIDEBAR FOOTER & LOGOUT BLOCK STYLES */
+		        .sidebar-footer { 
+		            margin-top: auto; 
+		            padding: 20px; 
+		            border-top: 1px solid rgba(255,255,255,0.05); 
+		            display: flex; 
+		            align-items: center; 
+		            justify-content: space-between;
+		            background: rgba(0, 0, 0, 0.15);
+		        }
+		        .user-details { display: flex; align-items: center; gap: 12px; }
+		        .user-avatar { 
+		            width: 36px; 
+		            height: 36px; 
+		            background: #00ca72; 
+		            color: #fff; 
+		            border-radius: 50%; 
+		            display: flex; 
+		            align-items: center; 
+		            justify-content: center; 
+		            font-weight: 700; 
+		            font-size: 14px;
+		        }
+		        .user-meta h4 { font-size: 13px; color: #fff; font-weight: 600; }
+		        .user-meta p { font-size: 11px; color: #64748b; }
+		        .btn-sidebar-logout { 
+		            color: #94a3b8; 
+		            text-decoration: none; 
+		            font-size: 18px; 
+		            transition: color 0.2s, transform 0.2s; 
+		            padding: 4px 8px;
+		            border-radius: 6px;
+		        }
+		        .btn-sidebar-logout:hover { 
+		            color: #ef4444; 
+		            background: rgba(239, 68, 68, 0.1);
+		            transform: translateX(2px); 
+		        }
+
+        /* 2. MAIN LAYOUT SHELL */
+        .main-wrapper { margin-left: 260px; width: calc(100% - 260px); display: flex; flex-direction: column; }
+        .top-navbar { height: 70px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 90; transition: background 0.3s; }
+        .search-container input { width: 300px; padding: 10px 16px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); border-radius: 8px; font-size: 14px; outline: none; }
+        .top-nav-actions { display: flex; align-items: center; gap: 16px; }
+        
+        .nav-theme-btn { width: 40px; height: 40px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 50%; color: var(--text-main); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .nav-theme-btn:hover { background: #00ca72; color: #fff; }
+        .btn-new-prop { background: #00ca72; color: #fff; padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; text-decoration: none; }
+
+        .dashboard-content { padding: 32px; display: flex; flex-direction: column; gap: 32px; }
+        .welcome-row h1 { font-size: 26px; font-weight: 700; color: var(--text-main); margin-bottom: 6px; }
+        .welcome-row p { font-size: 14px; color: var(--text-sub); }
+
+        /* 3. SHADCN CARDS GRID ROW WITH INTERACTIVE HOVER EFFECTS */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+        
+        .stat-card { 
+            background: var(--bg-card); 
+            border: 1px solid var(--border-color); 
+            padding: 24px; 
+            border-radius: 12px; 
+            box-shadow: var(--card-shadow); 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                        box-shadow 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                        border-color 0.3s ease, background 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: var(--hover-shadow);
+            border-color: #00ca72;
+        }
+
+        .stat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; color: var(--text-sub); font-size: 13px; font-weight: 600; transition: transform 0.3s ease; }
+        .stat-icon { font-size: 18px; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: transform 0.4s ease; }
+        .icon-g { background: rgba(0,202,114,0.1); color: #00ca72; }
+        
+        .stat-body h2 { font-size: 28px; font-weight: 700; color: var(--text-main); margin-bottom: 6px; transition: color 0.3s; }
+        .stat-badge { font-size: 12px; font-weight: 600; transition: transform 0.3s ease; }
+        .badge-up { color: #00ca72; }
+        .badge-down { color: #ef4444; }
+
+        .mini-wave { width: 100%; height: 3px; background: var(--border-color); margin-top: 15px; border-radius: 2px; position: relative; transition: height 0.3s ease; }
+        .mini-wave::after { content:''; position:absolute; left:0; top:0; height:100%; width:70%; background:#00ca72; border-radius:2px; transition: width 0.4s ease; }
+
+        .stat-card:hover .stat-body h2 { color: #00ca72; }
+        .stat-card:hover .stat-icon { transform: scale(1.2) rotate(5deg); }
+        .stat-card:hover .mini-wave { height: 5px; }
+
+        /* CARD MANAGEMENT MODULES ROW */
+        .management-control-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: transform 0.4s ease, box-shadow 0.4s ease, background 0.3s;
+        }
+        .management-control-panel:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--hover-shadow);
+        }
+        .module-section-box {
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.01);
+        }
+        body.dark-theme .module-section-box { background: rgba(255, 255, 255, 0.01); }
+        .module-title-header { font-size: 18px; font-weight: 700; color: #3b82f6; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .module-content-text { font-size: 14px; color: var(--text-sub); margin-bottom: 15px; }
+        
+        .btn-old-orange { background: #f39c12; color: #fff; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: none; display: inline-block; transition: background 0.2s; margin-right: 10px; }
+        .btn-old-orange:hover { background: #e67e22; }
+        .btn-old-green { background: #2ecc71; color: #fff; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: none; display: inline-block; transition: background 0.2s; }
+        .btn-old-green:hover { background: #27ae60; }
+
+        /* 4. SPLIT AREA GRID ONE: MAIN WAVE GRAPH & DONUT CHASSIS PANELS */
+        .analytics-split-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+        
+        .dashboard-panel-card { 
+            background: var(--bg-card); 
+            border: 1px solid var(--border-color); 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: var(--card-shadow);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                        box-shadow 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                        border-color 0.3s, background 0.3s;
+        }
+        .dashboard-panel-card:hover { transform: translateY(-4px); box-shadow: var(--hover-shadow); border-color: rgba(0, 202, 114, 0.2); }
+
+        .panel-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .panel-header h3 { font-size: 16px; font-weight: 700; color: var(--text-main); }
+        .chart-surface-canvas { padding: 24px; width: 100%; height: 320px; position: relative; transition: transform 0.4s ease; }
+        .dashboard-panel-card:hover .chart-surface-canvas { transform: scale(1.01); }
+        
+        .donut-flex-box { display: flex; flex-direction: column; align-items: center; justify-content: center; height: calc(100% - 60px); padding: 20px; }
+        .donut-canvas-frame { width: 160px; height: 160px; position: relative; margin-bottom: 20px; transition: transform 0.4s ease; }
+        .dashboard-panel-card:hover .donut-canvas-frame { transform: scale(1.06) rotate(3deg); }
+
+        /* 5. SPLIT AREA GRID TWO: PROPERTIES CATALOG MATRIX & TARGET MODULES */
+        .data-split-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+        .table-responsive { width: 100%; overflow-x: auto; }
+        .apex-data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .apex-data-table th { background: var(--table-th); padding: 14px 24px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-sub); border-bottom: 1px solid var(--border-color); }
+        .apex-data-table td { padding: 16px 24px; font-size: 14px; color: var(--text-main); border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        .apex-data-table tr:hover td { background-color: var(--table-th); }
+        
+        .property-title-cell { font-weight: 600; color: var(--text-main); }
+        .property-desc-cell { font-size: 12px; color: var(--text-sub); max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .btn-action-edit { background: #f39c12; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; text-decoration: none; margin-right: 5px; transition: opacity 0.2s; }
+        .btn-action-edit:hover { opacity: 0.9; }
+        .btn-action-delete { background: #c0392b; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; text-decoration: none; transition: background 0.2s; }
+        .btn-action-delete:hover { background: #e74c3c; }
+
+        /* Goals list tracks */
+        .goals-list { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+        .goal-item { display: flex; flex-direction: column; gap: 8px; cursor: pointer; }
+        .goal-meta { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--text-sub); transition: color 0.3s; }
+        .progress-track { width: 100%; height: 8px; background: var(--input-bg); border-radius: 4px; overflow: hidden; transition: height 0.3s ease; }
+        .progress-fill { height: 100%; background: #00ca72; border-radius: 4px; transition: filter 0.3s; }
+        
+        .goal-item:hover .goal-meta { color: var(--text-main); }
+        .goal-item:hover .progress-track { height: 11px; }
+        .goal-item:hover .progress-fill { filter: brightness(1.1); }
+
+        @media (max-width: 1200px) {
+            .stats-grid, .analytics-split-layout, .data-split-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+	<!-- 1. SIDEBAR NAVIGATION CONTROLLERS RAIL WITH USER BLOCK -->
+	    <div class="sidebar">
+	        <div class="sidebar-brand">
+	            <div class="brand-icon">Ω</div>
+	            <div class="brand-text">APEX PORTAL</div>
+	        </div>
+	        
+	        <ul class="sidebar-menu">
+	            <div class="menu-label">Overview</div>
+	            <li class="menu-item active"><a href="#">📊 System Dashboard</a></li>
+	            
+	            <div class="menu-label">Navigation Links</div>
+	            <li class="menu-item"><a href="/">🏠 View Public Website</a></li>
+	            <li class="menu-item"><a href="/admin/service/add">➕ Add New Property</a></li>
+	            <li class="menu-item"><a href="/about">ℹ️ About Portal Section</a></li>
+	            <li class="menu-item"><a href="/contact">📥 Contact Inquiry Page</a></li>
+	        </ul>
+
+	        <!-- 🎯 RESTORED LOGOUT FEATURE: Sidebar ke bottom mein fixed dynamic profile segment -->
+	        <div class="sidebar-footer">
+	            <div class="user-details">
+	                <div class="user-avatar">SP</div>
+	                <div class="user-meta">
+	                    <h4>Satyam Prajapati</h4>
+	                    <p>Administrator</p>
+	                </div>
+	            </div>
+	            <!-- Backend controller ke /admin/logout endpoint ko seedhe fire karega -->
+	            <a href="/admin/logout" class="btn-sidebar-logout" title="Secure Logout System">↩️</a>
+	        </div>
+	    </div>
+    <!-- 2. MAIN CONTAINER AREA HUB -->
+    <div class="main-wrapper">
+        
+        <!-- Navigation Navbar Header bar -->
+        <div class="top-navbar">
+            <div class="search-container">
+                <input type="text" placeholder="Search matrices, nodes, entities...">
+            </div>
+            <div class="top-nav-actions">
+                <button class="nav-theme-btn" id="themeToggler" title="Switch Theme View">🌙</button>
+                <a href="/admin/service/add" class="btn-new-prop">+ New Property</a>
+            </div>
+        </div>
+
+        <!-- Inner Content Dashboard Spacing -->
+        <div class="dashboard-content">
+            
+            <div class="welcome-row">
+                <h1>Dashboard</h1>
+                <p>Yahan se aap apni website ka poora data manage kar sakte hain.</p>
+            </div>
+
+            <!-- Stats Rows Counters -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header"><span>Total Revenue</span><div class="stat-icon icon-g">$</div></div>
+                    <div class="stat-body"><h2>$48,295</h2><div class="stat-badge badge-up">▲ +12.5% vs last month</div></div>
+                    <div class="mini-wave"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header"><span>Active Leads</span><div class="stat-icon icon-g">👥</div></div>
+                    <div class="stat-body"><h2>2,847</h2><div class="stat-badge badge-up">▲ +8.2% vs last month</div></div>
+                    <div class="mini-wave" style="background:var(--border-color);"><div style="width:55%; background:#3b82f6;" class="mini-wave"></div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header"><span>Total Queries</span><div class="stat-icon icon-g">📥</div></div>
+                    <div class="stat-body"><h2>1,432</h2><div class="stat-badge badge-down">▼ -3.1% vs last month</div></div>
+                    <div class="mini-wave" style="background:var(--border-color);"><div style="width:40%; background:#ef4444;" class="mini-wave"></div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header"><span>Portal Views</span><div class="stat-icon icon-g">👁️</div></div>
+                    <div class="stat-body"><h2>284K</h2><div class="stat-badge badge-up">▲ +24.7% vs last month</div></div>
+                    <div class="mini-wave" style="background:var(--border-color);"><div style="width:85%; background:#f59e0b;" class="mini-wave"></div></div>
+                </div>
+            </div>
+
+            <!-- OLD CARD MANAGEMENT MODULES ROW -->
+            <div class="management-control-panel">
+                <div class="module-section-box">
+                    <div class="module-title-header">⭐ Banner Module</div>
+                    <div class="module-content-text">
+                        <strong>Current Banner Text:</strong> "Welcome to My Fresh Website Project!"
+                    </div>
+                    <a href="#" class="btn-old-orange">Edit Banner</a>
+                    <a href="/admin/service/add" class="btn-old-green">+ Add New Service Card</a>
+                </div>
+                <div class="module-section-box">
+                    <div class="module-title-header">⭐ Service Module</div>
+                    <div class="module-content-text">Create, customize, and push instant live estate properties items catalog updates securely.</div>
+                    <a href="/admin/service/add" class="btn-old-green">+ Add New Service Card</a>
+                </div>
+            </div>
+
+            <!-- ANALYTICS AREA SHARDS SPLIT LAYOUT -->
+            <div class="analytics-split-layout">
+                <div class="dashboard-panel-card">
+                    <div class="panel-header"><h3>Overview (Monthly Performance)</h3></div>
+                    <div class="chart-surface-canvas">
+                        <canvas id="mainEcosystemChart"></canvas>
+                    </div>
+                </div>
+                <div class="dashboard-panel-card">
+                    <div class="panel-header"><h3>Traffic Sources View</h3></div>
+                    <div class="donut-flex-box">
+                        <div class="donut-canvas-frame">
+                            <canvas id="trafficDonutChart"></canvas>
+                        </div>
+                        <div style="width:100%; font-size:13px; color:var(--text-sub); display:flex; flex-direction:column; gap:8px;">
+                            <div style="display:flex; justify-content:space-between;"><span>🟢 Direct Traffic</span><b style="color:var(--text-main);">35%</b></div>
+                            <div style="display:flex; justify-content:space-between;"><span>🔵 Organic Channels</span><b style="color:var(--text-main);">28%</b></div>
+                            <div style="display:flex; justify-content:space-between;"><span>🟣 Referral Links</span><b style="color:var(--text-main);">22%</b></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DATA SPLIT CONTROLLERS ROWS: PROPERTIES CATALOG MATRIX -->
+            <div class="data-split-layout">
+                <div class="dashboard-panel-card">
+                    <div class="panel-header"><h3>Live Properties Catalog Map</h3></div>
+                    <div class="table-responsive">
+                        <table class="apex-data-table">
+                            <thead>
+                                <tr>
+                                    <th>Property Title</th>
+                                    <th>Description Details String</th>
+                                    <th style="text-align: center;">Actions Trigger</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="s : ${services}">
+                                    <td><div class="property-title-cell" th:text="${s.title}">VVIP Namah</div></td>
+                                    <td><div class="property-desc-cell" th:text="${s.description}">Luxury residential layout description metadata strings context.</div></td>
+                                    <td style="text-align: center;">
+                                        <a href="#" class="btn-action-edit">Edit</a>
+                                        <a th:href="@{/admin/delete/{id}(id=${s.id})}" class="btn-action-delete" onclick="return confirm('Bhai, kya aap sach mein ye property card delete karna chahte ho?')">Delete</a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(services)}">
+                                    <td colspan="3" style="text-align: center; padding: 40px; color: var(--text-sub); font-weight: 500;">
+                                        ⚠️ Property Master database is currently empty. Click "+ New Property" to populate catalogs.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="dashboard-panel-card">
+                    <div class="panel-header"><h3>Monthly Targets Progress</h3></div>
+                    <div class="goals-list">
+                        <div class="goal-item">
+                            <div class="goal-meta"><span>Monthly Revenue Target</span><span>88%</span></div>
+                            <div class="progress-track"><div class="progress-fill" style="width: 88%;"></div></div>
+                        </div>
+                        <div class="goal-item">
+                            <div class="goal-meta"><span>New Leads Verification</span><span>65%</span></div>
+                            <div class="progress-track"><div class="progress-fill" style="width: 65%; background: #3b82f6;"></div></div>
+                        </div>
+                        <div class="goal-item">
+                            <div class="goal-meta"><span>Conversion Success Rate</span><span>76%</span></div>
+                            <div class="progress-track"><div class="progress-fill" style="width: 76%; background: #f59e0b;"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🎯 NEW SECTION ROW: ABOUT & CONTACT MODULE LOG TRACKER (Bina kisi purane section ko chhede) -->
+            <div class="data-split-layout">
+                
+                <!-- Left Panel: About Us Content Summary Display -->
+                <div class="dashboard-panel-card">
+                    <div class="panel-header">
+                        <h3>ℹ️ About Us Module Manager</h3>
+                        <a href="#" class="btn-old-orange" style="padding: 4px 10px; font-size: 11px;">Update About Info</a>
+                    </div>
+                    <div style="padding: 24px; font-size: 14px; line-height: 1.6; color: var(--text-sub);">
+                        <p style="margin-bottom: 12px; color: var(--text-main); font-weight: 600;">Current Portal Portfolio Summary:</p>
+                        <p style="border-left: 3px solid #00ca72; padding-left: 12px; font-style: italic;">
+                            "Apna Real Estate is a leading institutional property portal providing elite commercial configurations and luxury housing choices to thousands of modern home buyers."
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Right Panel: User Inquiries / Contact Messages Metrics Grid -->
+                <div class="dashboard-panel-card">
+                    <div class="panel-header">
+                        <h3>📥 Contact Queries Feed</h3>
+                        <span style="background: rgba(59,130,246,0.1); color: #3b82f6; font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: bold;">Live</span>
+                    </div>
+                    <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+                        
+                        <!-- Static Placeholder query logs showing user inbox channels -->
+                        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 4px;">
+                                <span>Satyam Prajapati</span>
+                                <span style="color: #00ca72;">Just Now</span>
+                            </div>
+                            <p style="font-size: 12px; color: var(--text-sub);">Interested in VVIP Namah project premium villa specs layout...</p>
+                        </div>
+
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 4px;">
+                                <span>Amit Sharma</span>
+                                <span style="color: var(--text-sub);">2 hours ago</span>
+                            </div>
+                            <p style="font-size: 12px; color: var(--text-sub);">Need price breakup catalog sheets for Migsun Elite One towers...</p>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SCRIPTS INTERFACE DATA GRAPH ANIMATION BINDINGS -->
+    <script>
+        const ctxWave = document.getElementById('mainEcosystemChart').getContext('2d');
+        const greenGrad = ctxWave.createLinearGradient(0, 0, 0, 300);
+        greenGrad.addColorStop(0, 'rgba(0, 202, 114, 0.22)');
+        greenGrad.addColorStop(1, 'rgba(0, 202, 114, 0.0)');
+
+        let ecosystemChart = new Chart(ctxWave, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    data: [18000, 23000, 21000, 28000, 32100, 30000, 38000, 41000, 37000, 44000, 42000, 49000],
+                    borderColor: '#00ca72',
+                    borderWidth: 3,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#00ca72',
+                    backgroundColor: greenGrad,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 11 } } },
+                    y: { grid: { color: 'rgba(100,116,139,0.06)' }, ticks: { color: '#64748b', font: { size: 11 } } }
+                }
+            }
+        });
+
+        const ctxDonut = document.getElementById('trafficDonutChart').getContext('2d');
+        let donutChart = new Chart(ctxDonut, {
+            type: 'doughnut',
+            data: {
+                labels: ['Direct', 'Organic', 'Referral'],
+                datasets: [{
+                    data: [35, 28, 22],
+                    backgroundColor: ['#00ca72', '#3b82f6', '#a855f7'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '75%'
+            }
+        });
+
+        const themeBtn = document.getElementById('themeToggler');
+        themeBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-theme');
+            
+            if(document.body.classList.contains('dark-theme')) {
+                themeBtn.innerHTML = "☀️";
+                ecosystemChart.options.scales.y.grid.color = 'rgba(255,255,255,0.05)';
+            } else {
+                themeBtn.innerHTML = "🌙";
+                ecosystemChart.options.scales.y.grid.color = 'rgba(100,116,139,0.06)';
+            }
+            ecosystemChart.update();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Animated Portal Center</title>
+    <style>
+        /* Global Canvas Reset */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #15151e; /* Deeper cinematic dark canvas */
+            overflow: hidden;
+            position: relative;
+            perspective: 1000px; /* Essential for enabling true 3D spatial rotations */
+        }
+
+        /* ⚡️ 1. WHOLE PAGE CORNER GLOW EFFECT (Body Borders) */
+        .page-border-glow {
+            position: absolute;
+            inset: 0;
+            border: 6px solid transparent;
+            background: linear-gradient(90deg, #45f3ff, #ff2770) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0; 
+            transition: opacity 0.6s ease;
+            pointer-events: none;
+            z-index: 1; 
+        }
+        
+        body.glow-active .page-border-glow {
+            opacity: 1;
+        }
+
+        /* 🚀 2. THE MASTER 3D MORPHING INTERACTIVE CONTAINER */
+        .box {
+            position: relative;
+            width: 320px;  
+            height: 90px;  
+            background: #22222e;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 10;
+            
+            /* 3. True 3D Depth Angles Initialization */
+            transform: style 3d;
+            transform: rotateX(10deg) rotateY(-10deg); /* Tilt position for realistic 3D appearance */
+            box-shadow: -15px 20px 35px rgba(0, 0, 0, 0.6), inset 1px 1px 2px rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+
+            /* Snappy elastic velocity transition curves */
+            transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                        height 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                        transform 0.4s ease, box-shadow 0.5s ease;
+        }
+
+        /* Default Cyan Pulse Light around the pill */
+        .box:not(.expanded) {
+            border-color: rgba(69, 243, 255, 0.3);
+            box-shadow: -10px 15px 25px rgba(0,0,0,0.5), 0 0 15px rgba(69, 243, 255, 0.15);
+        }
+
+        /* Hover interaction shifts angles slightly for dynamic user feedback */
+        .box:not(.expanded):hover {
+            transform: rotateX(5deg) rotateY(-5deg) scale(1.05);
+            box-shadow: -20px 25px 40px rgba(0,0,0,0.7), 0 0 25px rgba(69, 243, 255, 0.35);
+            border-color: #45f3ff;
+        }
+
+        /* Fully Expanded Form Panel Dimensions (Straightens up smoothly into standard face) */
+        .box.expanded {
+            width: 400px;
+            height: 480px;
+            cursor: default;
+            transform: rotateX(0deg) rotateY(0deg); /* Resolves tilt safely for optimal form input readability */
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        /* 🎨 4. THE BUTTON SIDE ACCENTS LOGIC (Extending Plates from Reference Screen) */
+        .box::before, .box::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 60%;
+            border-radius: 6px;
+            transition: opacity 0.4s ease, height 0.4s ease, transform 0.4s ease;
+            z-index: -1; /* Layer behind main container card */
+        }
+
+        /* Left Side Crimson Pink Accent Badge Plate */
+        .box::before {
+            left: -8px;
+            top: 20%;
+            background: #ff2770;
+            box-shadow: -5px 0 15px rgba(255, 39, 112, 0.5);
+        }
+
+        /* Right Side Electric Cyan Accent Badge Plate */
+        .box::after {
+            right: -8px;
+            top: 20%;
+            background: #45f3ff;
+            box-shadow: 5px 0 15px rgba(69, 243, 255, 0.5);
+        }
+
+        /* Subtle offset scaling movements when form goes expanded mode */
+        .box.expanded::before { height: 40%; top: 30%; transform: translateX(-4px); }
+        .box.expanded::after { height: 40%; top: 30%; transform: translateX(4px); }
+
+        /* 🎯 INITIAL CENTRALIZED PULSE BUTTON LAYOUT */
+        .trigger-button-view {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            color: #fff;
+            font-size: 22px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            width: 100%;
+            height: 100%;
+            user-select: none;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .trigger-button-view span.pulse-heart { color: #ff2770; display: inline-block; animation: heartBeat 1.4s infinite; }
+        .trigger-button-view span.pulse-arrow { color: #45f3ff; display: inline-block; }
+
+        @keyframes heartBeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.25); }
+        }
+
+        /* Embedded Form content grid block */
+        .form-content-view {
+            width: 100%;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            transition: opacity 0.3s ease;
+        }
+
+        .box.expanded .trigger-button-view { display: none !important; }
+        .box.expanded .form-content-view { opacity: 1; pointer-events: auto; position: relative; }
+
+        /* Inside Headings */
+        .form-content-view h2 {
+            color: #fff;
+            font-weight: 600;
+            font-size: 25px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 35px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .form-content-view h2 span.pink { color: #ff2770; }
+        .form-content-view h2 span.cyan { color: #45f3ff; }
+
+        /* Input pill field items configuration layout templates */
+        .input-box {
+            position: relative;
+            margin-bottom: 22px;
+            width: 100%;
+        }
+
+        .input-box input {
+            width: 100%;
+            padding: 14px 25px;
+            background: #eef2f7; /* High visibility white inputs matching reference snapshot layers */
+            border: none;
+            border-radius: 25px;
+            outline: none;
+            font-size: 15px;
+            color: #111;
+            font-weight: 600;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s;
+        }
+
+        .input-box input:focus {
+            box-shadow: 0 0 15px rgba(69, 243, 255, 0.7);
+        }
+
+        /* Error messages system alerts warning wrappers */
+        .err-pills {
+            background: rgba(255, 39, 112, 0.12);
+            border: 1px solid #ff2770;
+            color: #ff2770;
+            padding: 10px;
+            border-radius: 25px;
+            font-size: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Bright Cyan Submit Button with Active compression zoom pop metrics */
+        .btn-signin {
+            width: 100%;
+            padding: 14px;
+            background: #45f3ff;
+            color: #000;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(69, 243, 255, 0.3);
+            transition: background 0.3s, box-shadow 0.3s, transform 0.1s ease;
+        }
+
+        .btn-signin:hover {
+            background: #fff;
+            box-shadow: 0 0 25px #45f3ff;
+            transform: scale(1.02);
+        }
+        .btn-signin:active { transform: scale(0.96); }
+
+        /* Meta footer alignment row options links navigation */
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            width: 100%;
+        }
+        .meta-row a { color: rgba(255, 255, 255, 0.4); text-decoration: none; transition: color 0.3s; }
+        .meta-row a:hover { color: #fff; }
+        .meta-row a.signup-accent { color: #ff2770; font-weight: bold; }
+
+        /* Top Back navigation index link asset items pointer */
+        .btn-back {
+            position: absolute; top: 25px; left: 25px;
+            color: rgba(255,255,255,0.4); text-decoration: none;
+            font-size: 13px; font-weight: 600; text-transform: uppercase;
+            transition: color 0.3s; z-index: 200;
+        }
+        .btn-back:hover { color: #45f3ff; }
+    </style>
+</head>
+<body th:classappend="${param.error} ? 'glow-active' : ''">
+
+    <div class="page-border-glow"></div>
+
+    <a href="/" class="btn-back">← Back to Portal</a>
+
+    <div class="box" id="loginShell" th:classappend="${param.error} ? 'expanded' : ''" onclick="trigger3DMorph(event)">
+        
+        <div class="trigger-button-view" id="triggerBtn">
+            <span class="pulse-arrow">📲</span>
+            <span>login</span>
+            <span class="pulse-heart">❤️</span>
+        </div>
+
+        <div class="form-content-view">
+            <form th:action="@{/admin/login}" method="POST">
+                
+                <h2>
+                    <span class="cyan">📲</span> 
+                    login 
+                    <span class="pink">❤️</span>
+                </h2>
+
+                <div th:if="${param.error}" class="err-pills">
+                    ⚠️ Authentication failed. Check configuration secure strings!
+                </div>
+
+                <div class="input-box">
+                    <input type="text" name="username" placeholder="admin" required autocomplete="off">
+                </div>
+
+                <div class="input-box">
+                    <input type="password" name="password" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn-signin">sign in</button>
+
+                <div class="meta-row">
+                    <a href="#">Forgot Password</a>
+                   <a href="/admin/signup" class="signup-accent">Sign up</a>
+                </div>
+                
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        const shell = document.getElementById('loginShell');
+        const body = document.body;
+
+        function trigger3DMorph(event) {
+            if (shell.classList.contains('expanded')) return;
+            event.stopPropagation();
+            
+            // 1. Expand the box safely using target elastic parameters
+            shell.classList.add('expanded');
+            
+            // 2. Light up page borders glow fields array
+            body.classList.add('glow-active');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Animated Registration Portal</title>
+    <style>
+        /* Global Reset matching login styling frameworks */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #15151e; 
+            overflow: hidden;
+            position: relative;
+            perspective: 1000px;
+        }
+
+        /* ⚡️ Whole Page Corner Glowing Neon Accents Layer */
+        .page-border-glow {
+            position: absolute;
+            inset: 0;
+            border: 6px solid transparent;
+            background: linear-gradient(90deg, #ff2770, #45f3ff) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            z-index: 1; 
+        }
+
+        /* 🚀 3D Isometric View Form Main Body Wrapper Container */
+        .box {
+            position: relative;
+            width: 400px;
+            height: 480px;
+            background: #22222e;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            transform: rotateX(5deg) rotateY(5deg);
+            box-shadow: -15px 20px 35px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 40px;
+            transition: transform 0.3s ease;
+        }
+        .box:hover {
+            transform: rotateX(0deg) rotateY(0deg) scale(1.01);
+        }
+
+        /* Lateral Side Accents (Pink & Cyan Ears) from your blueprint specs */
+        .box::before, .box::after {
+            content: ''; position: absolute; width: 12px; height: 40%; border-radius: 6px; z-index: -1;
+        }
+        .box::before { left: -8px; top: 30%; background: #ff2770; box-shadow: -5px 0 15px rgba(255, 39, 112, 0.5); }
+        .box::after { right: -8px; top: 30%; background: #45f3ff; box-shadow: 5px 0 15px rgba(69, 243, 255, 0.5); }
+
+        .form-content-view { width: 100%; display: flex; flex-direction: column; }
+
+        .form-content-view h2 {
+            color: #fff; font-weight: 600; font-size: 25px; text-transform: uppercase; letter-spacing: 2px;
+            margin-bottom: 35px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 12px;
+        }
+        .form-content-view h2 span.pink { color: #ff2770; }
+        .form-content-view h2 span.cyan { color: #45f3ff; }
+
+        /* Input pill boxes style structure templates sheets fields data loops metrics */
+        .input-box { position: relative; margin-bottom: 22px; width: 100%; }
+        .input-box input {
+            width: 100%; padding: 14px 25px; background: #eef2f7; border: none; border-radius: 25px;
+            outline: none; font-size: 15px; color: #111; font-weight: 600; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s;
+        }
+        .input-box input:focus { box-shadow: 0 0 15px rgba(255, 39, 112, 0.7); border: 1px solid #ff2770; }
+
+        /* Error Pills message blocks indicators components text wrapper alerts fields tags */
+        .err-pills { background: rgba(255, 39, 112, 0.12); border: 1px solid #ff2770; color: #ff2770; padding: 10px; border-radius: 25px; font-size: 12px; margin-bottom: 20px; text-align: center; }
+
+        /* Hot Neon Crimson Pink Trigger Registration Button Node */
+        .btn-register {
+            width: 100%; padding: 14px; background: #ff2770; color: #fff; border: none; border-radius: 25px;
+            font-size: 16px; font-weight: bold; cursor: pointer; letter-spacing: 0.5px; margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(255, 39, 112, 0.3);
+            transition: background 0.3s, box-shadow 0.3s, transform 0.1s ease;
+        }
+        .btn-register:hover { background: #fff; color: #000; box-shadow: 0 0 25px #ff2770; transform: scale(1.02); }
+        .btn-register:active { transform: scale(0.96); }
+
+        .meta-row { display: flex; justify-content: center; font-size: 13px; width: 100%; }
+        .meta-row a { color: rgba(255, 255, 255, 0.4); text-decoration: none; transition: color 0.3s; }
+        .meta-row a:hover { color: #fff; }
+        .meta-row a.login-accent { color: #45f3ff; font-weight: bold; margin-left: 5px; }
+
+        .btn-back { position: absolute; top: 25px; left: 25px; color: rgba(255,255,255,0.4); text-decoration: none; font-size: 13px; font-weight: 600; text-transform: uppercase; z-index: 200; }
+        .btn-back:hover { color: #ff2770; }
+    </style>
+</head>
+<body>
+
+    <div class="page-border-glow"></div>
+    <a href="/admin/login" class="btn-back">← Back to Login</a>
+
+    <div class="box">
+        <div class="form-content-view">
+            
+            <form th:action="@{/admin/register}" method="POST">
+                
+                <h2>
+                    <span class="pink">🔐</span> 
+                    Register 
+                    <span class="cyan">✨</span>
+                </h2>
+
+                <div th:if="${error}" class="err-pills" th:text="${error}">
+                    ⚠️ Validation alert badge parameters placeholder template
+                </div>
+
+                <div class="input-box">
+                    <input type="text" name="username" placeholder="Choose Username" required autocomplete="off">
+                </div>
+
+                <div class="input-box">
+                    <input type="password" name="password" placeholder="Create Password" required>
+                </div>
+
+                <button type="submit" class="btn-register">sign up</button>
+
+                <div class="meta-row">
+                    <span>Already have an account?</span>
+                    <a href="/admin/login" class="login-accent">Sign In</a>
+                </div>
+                
+            </form>
+
+        </div>
+    </div>
+
+</body>
+</html>

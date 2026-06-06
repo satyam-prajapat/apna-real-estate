@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Property Portal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background-color: #fcfcfc; color: #333; overflow-x: hidden; }
+
+        /* 1. Top Infobar & Navigation */
+        .top-bar { background: #2c3e50; color: #fff; padding: 10px 8%; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        .top-bar-left { display: flex; gap: 20px; }
+        header { background: #fff; padding: 15px 8%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .logo-box { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-icon { background: #1a252f; color: #fff; padding: 6px 10px; font-weight: bold; border-radius: 4px; border: 2px solid #f39c12; }
+        .logo-text { color: #1a252f; font-size: 22px; font-weight: bold; text-transform: uppercase; }
+        nav a { color: #555; text-decoration: none; margin-left: 30px; font-size: 15px; font-weight: 600; text-transform: uppercase; }
+        nav a:hover, nav a.active { color: #e74c3c; }
+
+        /* 2. Hero Slider */
+        .slider-container { position: relative; width: 100%; height: 75vh; background: #222; overflow: hidden; }
+        .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; visibility: hidden; transition: opacity 0.8s ease-in-out; display: flex; justify-content: center; align-items: center; background-size: cover !important; background-position: center !important; }
+        .slide.active { opacity: 1; visibility: visible; }
+        .slide-content { background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 45px; border-radius: 15px; text-align: center; color: #fff; max-width: 700px; width: 90%; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+        .slide-content h1 { font-size: 42px; font-weight: 700; margin-bottom: 15px; text-transform: uppercase; }
+        .btn-contact { background: #e74c3c; color: #fff; padding: 12px 35px; border-radius: 4px; text-decoration: none; font-weight: bold; display: inline-block; }
+        .arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.2); color: #fff; border: none; font-size: 30px; padding: 15px 20px; cursor: pointer; z-index: 10; border-radius: 5px; }
+        .arrow:hover { background: rgba(0,0,0,0.6); }
+        .arrow-left { left: 20px; }
+        .arrow-right { right: 20px; }
+
+        /* 3. Make The Right Choice Block (Stats) */
+        .stats-section { padding: 60px 8%; background: #fff; display: flex; align-items: center; justify-content: space-between; gap: 40px; }
+        .stats-left { flex: 1; }
+        .stats-left h2 { font-size: 36px; color: #111; margin-bottom: 15px; }
+        .stats-left h2 span { color: #d9534f; }
+        .stats-left p { color: #7f8c8d; font-size: 16px; margin-bottom: 30px; }
+        .counter-container { display: flex; gap: 20px; }
+        .counter-box { background: #fdfdfd; border: 1px solid #eee; padding: 20px; border-radius: 12px; text-align: center; width: 120px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .counter-num { font-size: 24px; font-weight: bold; color: #d9534f; margin-bottom: 5px; }
+        .counter-label { font-size: 13px; color: #7f8c8d; }
+        .stats-right { flex: 1.2; }
+        .stats-right img { width: 100%; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+
+        /* 4. Project Stages Section */
+        .stages-section { padding: 60px 8%; background: #f9fafe; display: flex; align-items: center; gap: 50px; }
+        .stages-left { flex: 1; }
+        .stages-left img { width: 100%; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        .stages-right { flex: 1; }
+        .stages-right h2 { font-size: 32px; color: #111; margin-bottom: 15px; }
+        .stages-right p { color: #7f8c8d; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
+        .badges-row { display: flex; gap: 30px; margin-bottom: 30px; }
+        .badge-item { text-align: center; }
+        .badge-icon { font-size: 24px; margin-bottom: 8px; }
+        .badge-title { font-size: 14px; font-weight: bold; color: #232a31; }
+        .btn-explore { background: #d9534f; color: white; padding: 12px 25px; border-radius: 4px; text-decoration: none; font-weight: bold; display: inline-block; }
+
+		/* 5. Dynamic Overlaid Project Grid Module (With Advanced Hover Effects) */
+		        .grid-section { padding: 80px 8%; text-align: center; background: #fff; }
+		        .grid-section h2 { font-size: 36px; color: #111; margin-bottom: 40px; }
+		        .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 35px; max-width: 1200px; margin: 0 auto; }
+		        
+		        /* Main Card Window */
+		        .premium-card { 
+		            position: relative; 
+		            width: 340px; 
+		            height: 260px; 
+		            border-radius: 12px; 
+		            overflow: hidden; 
+		            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+		            cursor: pointer;
+		        }
+		        
+		        /* Background Image Zoom Control */
+		        .card-bg { 
+		            width: 100%; 
+		            height: 100%; 
+		            object-fit: cover; 
+		            transition: transform 0.6s ease; /* Smooth slow zoom animation */
+		        }
+		        
+		        /* Floating Black Capsule Text Box */
+		        .card-overlay { 
+		            position: absolute; 
+		            bottom: 15px; /* Base position */
+		            left: 50%; 
+		            transform: translateX(-50%) translateY(0); 
+		            background: rgba(0, 0, 0, 0.8); 
+		            backdrop-filter: blur(4px); 
+		            -webkit-backdrop-filter: blur(4px); 
+		            color: #fff; 
+		            padding: 10px 25px; 
+		            border-radius: 25px; 
+		            font-size: 15px; 
+		            font-weight: bold; 
+		            text-align: center; 
+		            white-space: nowrap; 
+		            transition: transform 0.4s ease, background 0.4s ease, bottom 0.4s ease; /* Multi-axis text movement shift */
+		            z-index: 2;
+		        }
+
+		        /* 🚀 TRIGGER EFFECTS ON HOVER (Jab cursor image par jaye) */
+		        
+		        /* 1. Image turns into zoom mode */
+		        .premium-card:hover .card-bg { 
+		            transform: scale(1.12); /* 12% Image Zoom dynamically */
+		        }
+		        
+		        /* 2. Text capsule changes color and moves up cleanly */
+		        .premium-card:hover .card-overlay { 
+		            background: #d9534f; /* Turn Red on hover */
+		            bottom: 25px;       /* Pushes slightly up on Y-axis */
+		            transform: translateX(-50%) scale(1.05); /* Slight puff pop effect */
+		        }
+
+        /* 6. About Summary Block (Now shifted below projects) */
+        .about-summary { background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover; padding: 80px 20%; text-align: center; }
+        .about-summary h2 { font-size: 36px; color: #111; margin-bottom: 20px; }
+        .about-summary p { color: #444; font-size: 15px; line-height: 1.8; margin-bottom: 30px; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .btn-readmore { background: #d9534f; color: #fff; padding: 12px 35px; border-radius: 4px; text-decoration: none; font-weight: bold; display: inline-block; }
+
+        /* Footer */
+        footer { background: #232a31; color: #bdc3c7; padding: 60px 8% 20px 8%; border-top: 1px solid #34495e; }
+        .footer-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 40px; border-bottom: 1px solid #34495e; padding-bottom: 40px; }
+        .footer-col h3 { color: #fff; font-size: 16px; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; }
+        .footer-col p { font-size: 14px; line-height: 1.8; color: #a6b1ba; margin-bottom: 10px; }
+        .footer-col ul { list-style: none; }
+        .footer-col ul li { margin-bottom: 12px; }
+        .footer-col ul li a { color: #a6b1ba; text-decoration: none; font-size: 14px; }
+        .footer-logo-box { text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .footer-logo { width: 60px; height: 60px; background: #fff; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #1a252f; font-size: 24px; border: 2px solid #f39c12; margin-bottom: 15px; }
+        .copyright-bar { text-align: center; padding-top: 20px; font-size: 13px; color: #7f8c8d; }
+        .whatsapp-float { position: fixed; bottom: 25px; right: 25px; background: #25d366; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 1000; text-decoration: none; }
+        
+        @media (max-width: 900px) {
+            .stats-section, .stages-section, .footer-grid { flex-direction: column; grid-template-columns: 1fr; text-align: center; }
+            .counter-container, .badges-row { justify-content: center; }
+        }
+		
+		/* 🌓 DYNAMIC LIGHT/DARK ROOT OVERRIDES - MERGED SAFELY */
+		body.dark-theme {
+		    background-color: #090d16 !important;
+		    color: #f1f5f9 !important;
+		}
+		body.dark-theme .navbar {
+		    background-color: #121824 !important;
+		    border-bottom: 1px solid #1e293b !important;
+		}
+		body.dark-theme .brand-logo, body.dark-theme .nav-links a {
+		    color: #f1f5f9 !important;
+		}
+		body.dark-theme .premium-card {
+		    background-color: #121824 !important;
+		    border-color: #1e293b !important;
+		}
+		body.dark-theme .grid-section h2 {
+		    color: #f1f5f9 !important;
+		}
+
+		/* 🚀 SMOOTH ALL-CARD HOVER ZOOM & SLIDE-UP ANIMATIONS SETUP */
+		.premium-card {
+		    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), border-color 0.3s !important;
+		}
+		.premium-card:hover {
+		    transform: translateY(-8px) scale(1.01) !important;
+		    box-shadow: 0 20px 35px rgba(0, 0, 0, 0.3) !important;
+		    border-color: #ff9f43 !important;
+		}
+		.card-bg {
+		    transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+		}
+		.premium-card:hover .card-bg {
+		    transform: scale(1.12) rotate(0.5deg) !important;
+		}
+		.card-overlay {
+		    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.4s ease !important;
+		}
+		.premium-card:hover .card-overlay {
+		    transform: translateY(0) !important;
+		    opacity: 1 !important;
+		}
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <span>✉ info@apnarealestate.com</span>
+            <span>📞 +91 9873001265</span>
+        </div>
+        <div><span>🌐 📸 💬</span></div>
+    </div>
+
+    <header>
+        <a href="/" class="logo-box">
+            <span class="logo-icon">AR</span>
+            <span class="logo-text">APNA REAL ESTATE</span>
+        </a>
+        <nav>
+            <a href="/" class="active">Home</a>
+            <a href="/about">About</a>
+            <a href="/contact">Contact</a>
+            <a href="/admin/login">Admin Center</a>
+			<button id="homeThemeToggler" style="width: 36px; height: 36px; background: rgba(255,159,67,0.1); border: 1px solid #ff9f43; border-radius: 50%; color: #ff9f43; font-size: 16px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: transform 0.2s; margin-left: 20px; vertical-align: middle;" title="Switch Mode">🌙</button>
+        </nav>
+    </header>
+
+    <div class="slider-container">
+        <button class="arrow arrow-left" onclick="prevSlide()">&#10094;</button>
+        <button class="arrow arrow-right" onclick="nextSlide()">&#10095;</button>
+
+        <div th:if="${#lists.isEmpty(services)}" class="slide active" style="background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1920&q=80');">
+            <div class="slide-content">
+                <h1>Welcome to Our Portal</h1>
+                <p>Abhi database mein koi project card nahi hai. Admin panel par jaakar naya service card add kijiye!</p>
+                <a href="/admin/login" class="btn-contact">Go to Admin Panel</a>
+            </div>
+        </div>
+
+        <div th:each="s, iterStat : ${services}" class="slide" th:classappend="${iterStat.first} ? 'active' : ''">
+            <div class="slide-content">
+                <h1 th:text="${s.title}">Project Title</h1>
+                <p th:text="${s.description}">Project details render smoothly here.</p>
+                <a href="/contact" class="btn-contact">Contact Now</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="stats-section">
+        <div class="stats-left">
+            <h2>Make the <span>Right</span> Choice</h2>
+            <p>Your trusted partner in premium estate infrastructures. Delivering top architectural designs across locations with elite build validations.</p>
+            <div class="counter-container">
+                <div class="counter-box"><div class="counter-num">20+</div><div class="counter-label">Years</div></div>
+                <div class="counter-box"><div class="counter-num">20+</div><div class="counter-label">Projects</div></div>
+                <div class="counter-box"><div class="counter-num">15+</div><div class="counter-label">Builders</div></div>
+            </div>
+        </div>
+        <div class="stats-right">
+            <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80" alt="Building Architecture">
+        </div>
+    </section>
+
+    <section class="stages-section">
+        <div class="stages-left">
+            <img src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80" alt="Construction Worker">
+        </div>
+        <div class="stages-right">
+            <h2>Project Stages</h2>
+            <p>Track every milestone – planning, construction, and possession. We keep you updated at each step with complete transparency and certified safety checks.</p>
+            <div class="badges-row">
+                <div class="badge-item"><div class="badge-icon">💡</div><div class="badge-title">Pre-Launch</div></div>
+                <div class="badge-item"><div class="badge-icon">🏢</div><div class="badge-title">Under Construction</div></div>
+                <div class="badge-item"><div class="badge-icon">🔑</div><div class="badge-title">Ready to Move</div></div>
+            </div>
+            <a href="/contact" class="btn-explore">Explore Projects</a>
+        </div>
+    </section>
+
+	<section class="grid-section">
+		<h2>Our Elite Properties Catalog</h2>
+		    
+		    <div class="card-container">
+		        
+		        <!-- THYMELEAF LOOP: Database ka har ek service record alag premium card banakar load karega -->
+		        <div class="premium-card" th:each="s : ${services}">
+		            
+					<!-- 🎯 FIXED NEW ENGINE: Har property ke liye alag unique ID image select hogi -->
+					<!-- 🎯 FIXED 100% WORKING DYNAMIC ENGINE: Har iteration/loop par automatic photo ka design badal jayega -->
+					<img class="card-bg" 
+					     th:src="${s.id % 10 == 1 ? 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80' : 
+					              s.id % 10 == 2 ? 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80' : 
+					              s.id % 10 == 3 ? 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=80' : 
+					              s.id % 10 == 4 ? 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80' : 
+					              s.id % 10 == 5 ? 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=600&q=80' : 
+					              s.id % 10 == 6 ? 'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=600&q=80' :
+					              s.id % 10 == 7 ? 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=600&q=80' :
+					              s.id % 10 == 8 ? 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=600&q=80' :
+					              s.id % 10 == 9 ? 'https://images.unsplash.com/photo-1513584684374-8bab748fbf90?auto=format&fit=crop&w=600&q=80' : 
+					                               'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=600&q=80'}" 
+					     alt="Premium Architecture Real Estate">
+						 
+		            <!-- FLUID SLIDE-UP TEXT ENVELOPE: Hover karne par niche se chal kar upar pop-up hoga -->
+		            <div class="card-overlay">
+		                <span th:text="${s.title}">Default Title</span>
+		            </div>
+		            
+		        </div>
+
+		        <!-- Fallback Message: Agar database completely blank ho jaye -->
+		        <div th:if="${#lists.isEmpty(services)}" style="color: #64748b; font-size: 15px; width: 100%; text-align: center; padding: 40px;">
+		            ⚠️ Philhal koi dynamic property uploaded nahi hai. Admin panel se add kijiye bhai!
+		        </div>
+
+		    </div>
+		</div>
+	    </section>
+
+    <section class="about-summary">
+        <h2>We Are Architectural Experts</h2>
+        <p>There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text.</p>
+        <a href="/about" class="btn-readmore">Read More</a>
+    </section>
+
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h3>Contact Us</h3>
+                <p>📍 LGF-08 Ajnara Integrity, Rajnagar Extension, Ghaziabad, UP 201017</p>
+                <p>📞 +91 9873001265</p>
+                <p>✉ info@apnarealestate.com</p>
+            </div>
+            <div class="footer-logo-box">
+                <div class="footer-logo">AR</div>
+                <h4>Our Corporate Group</h4>
+                <p>Creating exceptional spaces for modern living — blending innovation, luxury, and comfort.</p>
+            </div>
+            <div class="footer-col" style="padding-left: 30px;">
+                <h3>Useful Links</h3>
+                <ul>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms & Conditions</a></li>
+                    <li><a href="/about">About Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>Opening Hours</h3>
+                <p>Monday - Sunday</p>
+                <p style="color: #fff; font-weight: bold;">10:00 AM - 10:00 PM</p>
+            </div>
+        </div>
+        <div class="copyright-bar">
+            <p>&copy; 2026 All Rights Reserved by <a href="/">Our Corporate Group</a></p>
+        </div>
+    </footer>
+
+    <a href="https://wa.me/919873001265" class="whatsapp-float" target="_blank"><span style="color:white; font-size:32px;">💬</span></a>
+
+	<script>
+	        // Array of 6 different stunning premium luxury slider backgrounds
+	        const bgImages = [
+	            "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1920&q=80",
+	            "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1920&q=80",
+	            "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80",
+	            "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1920&q=80",
+	            "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1920&q=80",
+	            "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1920&q=80"
+	        ];
+
+	        // Array of 6 different unique pictures explicitly for the lower grid cards
+	        const gridImages = [
+	            "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=500&q=80", // Card 1
+	            "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=500&q=80", // Card 2
+	            "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=500&q=80", // Card 3
+	            "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=500&q=80", // Card 4
+	            "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=500&q=80", // Card 5
+	            "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=500&q=80"  // Card 6
+	        ];
+
+	        let currentIdx = 0;
+	        const slides = document.querySelectorAll('.slide');
+	        const gridCardImages = document.querySelectorAll('.project-card-img');
+
+	        // Function to apply backgrounds dynamically based on card index
+	        function applyImages() {
+	            // 1. Apply Hero Slider Images
+	            slides.forEach((slide, index) => {
+	                if(slides.length > 1 || !slide.innerHTML.includes("Welcome to Our Portal")) {
+	                    const imgUrl = bgImages[index % bgImages.length];
+	                    slide.style.background = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${imgUrl}')`;
+	                }
+	            });
+
+	            // 2. Apply Unique Lower Grid Images to each project card
+	            gridCardImages.forEach((img, index) => {
+	                img.src = gridImages[index % gridImages.length];
+	            });
+	        }
+
+	        function showSlide(index) {
+	            if (slides.length <= 1) return; 
+	            slides[currentIdx].classList.remove('active');
+	            currentIdx = (index + slides.length) % slides.length;
+	            slides[currentIdx].classList.add('active');
+	        }
+
+	        function nextSlide() { showSlide(currentIdx + 1); }
+	        function prevSlide() { showSlide(currentIdx - 1); }
+
+	        // Trigger on load
+	        applyImages();
+	        if (slides.length > 1) { setInterval(nextSlide, 4000); }
+	    </script>
+		<script>
+		    // 🌓 SAFE RUNTIME ENGINE FOR LIGHT/DARK MODE 
+		    const themeBtn = document.getElementById('homeThemeToggler');
+		    
+		    if (localStorage.getItem('home-theme-selection') === 'dark') {
+		        document.body.classList.add('dark-theme');
+		        themeBtn.innerHTML = "☀️";
+		    }
+
+		    themeBtn.addEventListener('click', () => {
+		        document.body.classList.toggle('dark-theme');
+		        if(document.body.classList.contains('dark-theme')) {
+		            themeBtn.innerHTML = "☀️";
+		            localStorage.setItem('home-theme-selection', 'dark');
+		        } else {
+		            themeBtn.innerHTML = "🌙";
+		            localStorage.setItem('home-theme-selection', 'light');
+		        }
+		    });
+		</script>
+		<style>
+		/* ==========================================================================
+		   🌓 DYNAMIC LIGHT/DARK MODE STYLES & INTERACTIVE CARDS HOVER ZOOM
+		   ========================================================================== */
+
+		/* 1. Dark Mode Color Overrides (Safely applied when 'dark-theme' class is active) */
+		body.dark-theme {
+		    background-color: #090d16 !important;
+		    color: #f1f5f9 !important;
+		}
+
+		body.dark-theme header, 
+		body.dark-theme .navbar, 
+		body.dark-theme nav {
+		    background-color: #121824 !important;
+		    border-bottom: 1px solid #1e293b !important;
+		}
+
+		body.dark-theme nav a, 
+		body.dark-theme .logo-box, 
+		body.dark-theme .logo-text {
+		    color: #f1f5f9 !important;
+		}
+
+		body.dark-theme .premium-card {
+		    background-color: #121824 !important;
+		    border-color: #1e293b !important;
+		}
+
+		body.dark-theme .grid-section h2 {
+		    color: #f1f5f9 !important;
+		}
+
+		body.dark-theme .site-footer {
+		    background-color: #070a10 !important;
+		    border-top: 1px solid #1e293b !important;
+		}
+
+		/* 2. All-Card Hover Zoom Animation Config (With ultra-smooth cubic-bezier transition) */
+		.premium-card {
+		    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), 
+		                box-shadow 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), 
+		                border-color 0.3s !important;
+		}
+
+		/* Card lifts up slightly and updates border on hover */
+		.premium-card:hover {
+		    transform: translateY(-8px) scale(1.01) !important;
+		    box-shadow: 0 20px 35px rgba(0, 0, 0, 0.3) !important;
+		    border-color: #ff9f43 !important;
+		}
+
+		/* 3. Image Zoom Config inside the card frame */
+		.card-bg {
+		    transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+		}
+
+		/* Background image scales smoothly when card is targeted */
+		.premium-card:hover .card-bg {
+		    transform: scale(1.12) rotate(0.5deg) !important;
+		}
+
+		/* 4. Slide-Up Text Overlay Overlay Configuration */
+		.card-overlay {
+		    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), 
+		                opacity 0.4s ease !important;
+		}
+
+		/* Text elements smoothly float upwards and fade in */
+		.premium-card:hover .card-overlay {
+		    transform: translateY(0) !important;
+		    opacity: 1 !important;
+		}
+	</style>
+</body>
+</html>
